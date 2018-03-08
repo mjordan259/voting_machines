@@ -1,9 +1,9 @@
 ---
 title: "Voting Machine Breakdown"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
   word_document: default
 editor_options:
   chunk_output_type: console
@@ -15,6 +15,7 @@ library(tidyr)
 library(ggplot2)
 library(reshape2)
 library(wesanderson)
+library(lubridate)
 
 
 options(scipen=999)
@@ -43,9 +44,11 @@ ggplot(aes(x=reorder(WARD, -table(WARD)[WARD])), data=techlog) +
 
 Number of breakdowns by Ward, ordered highest to lowest. 
 
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 length(unique(techlog[["WARD_DIV"]]))
 ```
+
 
 192 Divisions (out of 1686) were ultimately affected, going by the repair log
 
@@ -69,28 +72,37 @@ Not all breakdowns have a listed scope, though guesses could be made by checking
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 vollog.clean$incident_time = gsub('2016-11-08',"",vollog.clean$incident_time)
 vollog.clean$incident_time = gsub('EST',"",vollog.clean$incident_time)
+vollog.clean$hour <- vollog.clean$incident_time
+vollog.clean$hour <- hms(vollog.clean$hour)
+```
 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+  
+vollog.clean$hour = gsub('H\\s\\d*M\\s\\d*S',"",vollog.clean$hour)
 ```
 
 
-```{r eval=FALSE, include=FALSE, include=FALSE}
-ggplot(vollog.clean, aes(x = incident_time, y=time)) + 
-  geom_line()
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(aes(x = reorder(hour,-table(hour)[hour])), data=vollog.clean) + 
+  geom_bar(fill=wes_palette(n=1, name="Chevalier")) +
+  labs(x='Hour of Breakdown', y='Number of Breakdowns')
 ```
+
+Most breakdowns occurred very early in the day, in the first few hours of voting.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, fig.height = 10, fig.width = 11}
 ggplot(aes(x=reorder(COMPLAINT, -table(COMPLAINT)[COMPLAINT])), data=techlog) +
   geom_bar(fill=wes_palette(n=1, name="Chevalier")) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x='Complaint', y='Number of Breakdowns')
-
+  labs(x='Complaint', y='Number of Breakdowns') 
 ```
 
 Error Code 70 and Power Failure were the cause of the most breakdowns by far.
 
 
-```{r}
+```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 #create dataset for most-affected wards (top ten?) and examine breakdowns
 ```
+
 
 
